@@ -3,6 +3,12 @@ import hashlib
 import requests
 
 
+def __hash_password(password):
+    binary_password = password.encode()
+    hashed_password = hashlib.sha512(binary_password)
+    return hashed_password.hexdigest()
+
+
 class User:
     def init(self, user_id: UUID, phone: str, username: str, password: str):
         self.__user_id = user_id
@@ -25,10 +31,10 @@ class User:
     def user_id(self):
         return self.__user_id
 
-    def __hash_password(self, password):
-        binary_password = password.encode()
-        hashed_password = hashlib.sha512(binary_password)
-        return hashed_password.hexdigest()
+    # def __hash_password(self, password):
+    #     binary_password = password.encode()
+    #     hashed_password = hashlib.sha512(binary_password)
+    #     return hashed_password.hexdigest()
 
 
 class Controller:
@@ -84,6 +90,21 @@ class Weather:
                 f"Не удалось получить данные о погоде. Ошибка {response.status_code}"
             )
 
+    def get_weather_by_coordinates(self, lon, lat):
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "appid": self.API_KEY,
+        }
+
+        response = requests.get(self.BASE_URL, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise ValueError(
+                f"Не удалось получить данные о погоде. Ошибка {response.status_code}"
+            )
+
     def print_weather(self, data):
         city_name = data["name"]
         max_temp = data["main"]["temp_max"]
@@ -99,14 +120,8 @@ class Weather:
 weather = Weather()
 city_name = input("Введите название города: ")
 weather_data = weather.get_weather_by_city(city_name)
+lat = float(input("Введите широту: "))
+lon = float(input("Введите долготу: "))
+weather_data = weather.get_weather_by_coordinates(lon, lat)
 weather.print_weather(weather_data)
-
-
-database = {
-    "users": [
-        User(user_id=uuid4(), phone="747", username="mark", password="1234"),
-    ],
-}
-
-controller = Controller(database)
 
