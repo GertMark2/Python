@@ -1,0 +1,77 @@
+from uuid import UUID, uuid4
+import hashlib
+
+
+class User:
+    def init(self, user_id: UUID, phone: str, username: str, password: str):
+        self.__user_id = user_id
+        self.__phone = phone
+        self.__username = username
+        self.password = self.hash_password(password)
+
+    def repr(self) -> str:
+        return f"User(id: {self.user_id}, username: {self.username}, phone: {self.__phone})"
+
+    @property
+    def username(self):
+        return self.__username
+
+    @property
+    def password(self):
+        return self.__password
+
+    @property
+    def user_id(self):
+        return self.__user_id
+
+    def __hash_password(self, password):
+        binary_password = password.encode()
+        hashed_password = hashlib.sha512(binary_password)
+        return hashed_password.hexdigest()
+
+
+class Controller:
+    def init(self, database):
+        self.__current_user = None
+        self.__database = database
+
+    def signup(self):
+        user_id = uuid4()
+        username = input("Введите ваш ник для регистрации: ")
+        password = input("Введите ваш пароль для регистрации: ")
+        hashed_password = self.__hash_password(password)
+        phone = input("Введите ваш номер телефона для регистрации: ")
+        new_user = User(
+            user_id=user_id,
+            phone=phone,
+            username=username,
+            password=hashed_password,
+        )
+        database["users"].append(new_user)
+        print("Вы успешно зарегистрировались!")
+
+    def auth_user(self):
+        while True:
+            username = input("Введите ваш ник для входа: ")
+            password = input("Введите ваш пароль для входа: ")
+            hashed_password = self.__hash_password(password)
+
+            for user in self.__database["users"]:
+                if user.username == username and user.password == hashed_password:
+                    print("Вы успешно вошли в аккаунт!")
+                    self.__current_user = user
+                    return
+            print("Неверно введены данные, пожалуйста, повторите")
+
+    def logout(self):
+        self.__current_user = None
+        print("Вы успешно вышли из аккаунта!")
+
+
+database = {
+    "users": [
+        User(user_id=uuid4(), phone="747", username="mark", password="1234"),
+    ],
+}
+
+controller = Controller(database)
