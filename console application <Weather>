@@ -1,5 +1,6 @@
 from uuid import UUID, uuid4
 import hashlib
+import requests
 
 
 class User:
@@ -68,6 +69,39 @@ class Controller:
         print("Вы успешно вышли из аккаунта!")
 
 
+class Weather:
+    API_KEY = "2616edff0099a3fc02337636ce31f2d0"
+    BASE_URL = "http://api.openweathermap.org/data/2.5/weather"
+
+    def get_weather_by_city(self, city_name):
+        params = {"q": city_name, "appid": self.API_KEY, "units": "metric"}
+        response = requests.get(self.BASE_URL, params=params)
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise ValueError(
+                f"Не удалось получить данные о погоде. Ошибка {response.status_code}"
+            )
+
+    def print_weather(self, data):
+        city_name = data["name"]
+        max_temp = data["main"]["temp_max"]
+        min_temp = data["main"]["temp_min"]
+        wind_speed = data["wind"]["speed"]
+
+        print(f"Город: {city_name}")
+        print(f"Максимальная температура: {max_temp} градусов")
+        print(f"Минимальная температура: {min_temp} градусов")
+        print(f"Скорость ветра: {wind_speed} м\с")
+
+
+weather = Weather()
+city_name = input("Введите название города: ")
+weather_data = weather.get_weather_by_city(city_name)
+weather.print_weather(weather_data)
+
+
 database = {
     "users": [
         User(user_id=uuid4(), phone="747", username="mark", password="1234"),
@@ -75,3 +109,4 @@ database = {
 }
 
 controller = Controller(database)
+
